@@ -1,0 +1,80 @@
+.container {
+    width: 400px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-section-container {
+    display: flex;
+}
+
+.palette-container {
+    width: 60%;
+    margin: 10px;
+    border-radius: 5px;
+    border: 2px solid black;
+}
+
+.slider-container {
+    width: 5%;
+    margin: 10px;
+    border-radius: 5px;
+    border: 2px solid black;
+}
+
+.prewiew-container {
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 10px;
+    text-align: center;
+}
+
+.color-preview {
+    width: 60px;
+    height: 50px;
+    border-radius: 5px;
+    border: 2px solid black;
+    margin: 5px auto 10px auto;
+}
+
+.color-history-container {
+    display: flex;
+}
+
+.color-choice {
+    width: 20px;
+    height: 20px;
+    margin: 6px;
+    border: 2px solid black;
+    border-radius: 50%;
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.input-container {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+span {
+    color: black;
+}
+
+label {
+    color: black;
+    width: 25%;
+    margin-top: 5px;
+}
+
+input {
+    width: 75%;
+    margin-top: 5px;
+}
+
+button {
+    margin: auto;
+    width: 40%;
+}

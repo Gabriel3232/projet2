@@ -1,0 +1,168 @@
+import { TestBed } from '@angular/core/testing';
+import { canvasTestHelper } from '@app/classes/canvas-test-helper';
+import { Color } from '@app/classes/color';
+import { Vec2 } from '@app/classes/vec2';
+import { ColorSelectionService } from '@app/services/color/color-selection-service';
+import { DrawingService } from '@app/services/drawing/drawing.service';
+import { KEYS } from '@app/shared/constant';
+import { RectangleService } from './rectangle-service';
+
+// tslint:disable:no-any
+describe('RectangleService', () => {
+    let service: RectangleService;
+    let drawServiceSpy: jasmine.SpyObj<DrawingService>;
+    let colorServiceSpy: jasmine.SpyObj<ColorSelectionService>;
+    let mouseEvent: MouseEvent;
+    let mouseEventRClick: MouseEvent;
+    let mouseEventLClick: MouseEvent;
+
+    let baseCtxStub: CanvasRenderingContext2D;
+    let previewCtxStub: CanvasRenderingContext2D;
+    let drawSpy: jasmine.Spy<any>;
+    let setAnchorSpy: jasmine.Spy<any>;
+    let updateOpposingCornerSpy: jasmine.Spy<any>;
+    let saveActionSpy: jasmine.Spy<any>;
+
+    beforeEach(() => {
+        const defaultColor = new Color(0, 0, 0);
+        colorServiceSpy = jasmine.createSpyObj('colorServiceSpy', ['']);
+        colorServiceSpy.primaryColor = defaultColor;
+        colorServiceSpy.secondaryColor = defaultColor;
+        baseCtxStub = canvasTestHelper.canvas.getContext('2d') as CanvasRenderingContext2D;
+        previewCtxStub = canvasTestHelper.drawCanvas.getContext('2d') as CanvasRenderingContext2D;
+        drawServiceSpy = jasmine.createSpyObj('DrawingService', ['clearCanvas', 'autoSave']);
+
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: DrawingService, useValue: drawServiceSpy },
+                { provide: ColorSelectionService, useValue: colorServiceSpy },
+            ],
+        });
+        service = TestBed.inject(RectangleService);
+        drawSpy = spyOn<any>(service, 'draw').and.callThrough();
+        setAnchorSpy = spyOn<any>(service.selectionBox, 'setAnchor');
+        updateOpposingCornerSpy = spyOn<any>(service.selectionBox, 'updateOpposingCorner');
+        saveActionSpy = spyOn<any>(service.action, 'next');
+
+        // Service's Spy configuration
+        // tslint:disable:no-string-literal
+        service['drawingService'].baseCtx = baseCtxStub; // Jasmine doesnt copy properties with underlying data
+        service['drawingService'].previewCtx = previewCtxStub;
+
+        mouseEvent = {
+            offsetX: 25,
+            offsetY: 25,
+            button: 0,
+        } as MouseEvent;
+
+        mouseEventLClick = {
+            offsetX: 25,
+            offsetY: 25,
+            buttons: 1,
+        } as MouseEvent;
+
+        mouseEventRClick = {
+            offsetX: 25,
+            offsetY: 25,
+            buttons: 2,
+        } as MouseEvent;
+    });
+
+    it('should be created', () => {
+        expect(service).toBeTruthy();
+    });
+
+    it(' mouseDown should set mouseDownCoord to correct position', () => {
+        const expectedResult: Vec2 = { x: 25, y: 25 };
+        service.onMouseDown(mouseEventLClick);
+        expect(setAnchorSpy).toHaveBeenCalledWith(expectedResult);
+    });
+
+    it(' mouseDown should set mouseDown property to true on left click', () => {
+        service.onMouseDown(mouseEventLClick);
+        expect(service.mouseDown).toEqual(true);
+    });
+
+    it(' mouseDown should set mouseDown property to false on right click', () => {
+        service.onMouseDown(mouseEventRClick);
+        expect(service.mouseDown).toEqual(false);
+    });
+
+    it(' onMouseUp should call draw and save action if mouse was already down', () => {
+        service.mouseDown = true;
+        service.onMouseUp(mouseEventLClick);
+        expect(drawSpy).toHaveBeenCalled();
+        expect(saveActionSpy).toHaveBeenCalled();
+    });
+
+    it(' onMouseUp should not call drawRectangle if mouse was not already down', () => {
+        service.mouseDown = false;
+        service.onMouseUp(mouseEvent);
+        expect(drawSpy).not.toHaveBeenCalled();
+    });
+
+    it(' onMouseMove should call drawRectangle if mouse was already down', () => {
+        service.mouseDown = true;
+        service.onMouseMove(mouseEventLClick);
+        expect(updateOpposingCornerSpy).toHaveBeenCalled();
+        expect(drawSpy).toHaveBeenCalled();
+    });
+
+    it(' onMouseMove should not call drawRectangle if mouse was not already down', () => {
+        service.mouseDown = false;
+        service.onMouseMove(mouseEvent);
+        expect(drawSpy).not.toHaveBeenCalled();
+    });
+
+    it(' onMouseMove should call drawRectangle if mouse was already down but left button wasnt', () => {
+        service.mouseDown = true;
+
+        service.onMouseMove(mouseEventRClick);
+        expect(drawSpy).toHaveBeenCalled();
+        expect(saveActionSpy).toHaveBeenCalled();
+    });
+
+    it('onKeyDown Should call drawRectangle with shiftDown to true when shift is pressed and mouse is down', () => {
+        service.onMouseDown(mouseEventLClick);
+        const keyEvent = {
+            key: KEYS.SHIFT,
+        } as KeyboardEvent;
+
+        service.onKeyDown(keyEvent);
+        expect(drawSpy).toHaveBeenCalled();
+        expect(service.shiftDown).toBeTrue();
+    });
+
+    it('onKeyUp upShould call drawRectangle with shiftDown to false when shift is released and mouse is down', () => {
+        service.onMouseDown(mouseEventLClick);
+        const keyEvent = {
+            key: KEYS.SHIFT,
+        } as KeyboardEvent;
+
+        service.onKeyUp(keyEvent);
+        expect(drawSpy).toHaveBeenCalled();
+        expect(service.shiftDown).toBeFalse();
+    });
+
+    it('key event Should not call drawRectangle when mouse is not down', () => {
+        service.mouseDown = false;
+        const keyEvent = {
+            key: KEYS.SHIFT,
+        } as KeyboardEvent;
+
+        service.onKeyDown(keyEvent);
+        service.onKeyUp(keyEvent);
+        expect(drawSpy).not.toHaveBeenCalled();
+    });
+
+    it('Pressing an other key shound not do anything', () => {
+        const keyEvent = {
+            key: 'Alt',
+        } as KeyboardEvent;
+
+        service.onKeyDown(keyEvent);
+        expect(service.shiftDown).toBeFalse();
+        service.onKeyUp(keyEvent);
+        expect(drawSpy).not.toHaveBeenCalled();
+    });
+});

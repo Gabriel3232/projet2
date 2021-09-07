@@ -1,0 +1,19 @@
+.container {
+    height: 100%;
+    display: flex;
+}
+
+.drawing-container {
+    flex: 1 1 auto;
+    overflow: scroll;
+}
+
+.drawing {
+    width: min-content;
+    display: grid;
+    outline: none;
+}
+
+.attribute-container {
+    width: 160px;
+}

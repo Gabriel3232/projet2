@@ -1,0 +1,26 @@
+<div class="container">
+    <div>
+        <li class="sidebar-container-top">
+            <ng-container *ngFor="let sidebarTool of sideBarToolsTop">
+                <button
+                    mat-flat-button
+                    (click)="onButtonPressTop(sidebarTool)"
+                    [ngStyle]="{ 'background-color': selectedSideBarToolId === sidebarTool.id ? 'rgb(0,117,255,0.5)' : 'white' }"
+                >
+                    {{ sidebarTool.name }}
+                </button>
+            </ng-container>
+            <button mat-flat-button (click)="clipBoard.copy()">Copier</button>
+            <button mat-flat-button (click)="clipBoard.cut()">Couper</button>
+            <button mat-flat-button (click)="clipBoard.paste()">Coller</button>
+            <button mat-flat-button (click)="clipBoard.delete()">Supprimer</button>
+            <button mat-flat-button *ngIf="showUndo" (click)="undoRedo.undo()"><mat-icon>undo</mat-icon></button>
+            <button mat-flat-button *ngIf="showRedo" (click)="undoRedo.redo()"><mat-icon>redo</mat-icon></button>
+        </li>
+    </div>
+    <div>
+        <li *ngFor="let sidebarTool of sideBarToolsBottom" class="sidebar-container-bottom">
+            <button mat-flat-button (click)="onButtonPressBottom(sidebarTool.id)">{{ sidebarTool.name }}</button>
+        </li>
+    </div>
+</div>
